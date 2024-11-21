@@ -1,0 +1,23 @@
+.event-card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 16px;
+    margin: 12px;
+    background-color: #f9f9f9;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.event-card:hover {
+    transform: scale(1.02);
+}
+
+.event-card h3 {
+    margin: 0 0 8px;
+    font-size: 1.5rem;
+}
+
+.event-card p {
+    margin: 4px 0;
+    color: #555;
+}
