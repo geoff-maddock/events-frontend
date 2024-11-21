@@ -3,6 +3,9 @@ import './EventCard.css';
 
 const EventCard = ({ event }) => (
     <div className="event-card">
+        {event.primary_photo_thumbnail && (
+            <img src={event.primary_photo_thumbnail} alt={event.name} className="event-thumbnail" />
+        )}
         <h3>{event.name}</h3>
         {event.short && <p><strong>Short Description:</strong> {event.short}</p>}
         {event.description && <p><strong>Description:</strong> {event.description}</p>}
