@@ -7,75 +7,127 @@ const Home = () => {
     const [eventsTomorrow, setEventsTomorrow] = useState([]);
     const [eventsInTwoDays, setEventsInTwoDays] = useState([]);
     const [eventsInThreeDays, setEventsInThreeDays] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);;
+    const [loadingToday, setLoadingToday] = useState(true);
+    const [loadingTomorrow, setLoadingTomorrow] = useState(true);
+    const [loadingInTwoDays, setLoadingInTwoDays] = useState(true);
+    const [loadingInThreeDays, setLoadingInThreeDays] = useState(true);
+    const [error, setError] = useState(null);
+    const [startDate, setStartDate] = useState(new Date());
+    const [darkMode, setDarkMode] = useState(false);
+
+    const getEventsForDay = async (date, setEvents, setLoading) => {
+        try {
+            const events = await fetchEvents(date.toISOString().split('T')[0], date.toISOString().split('T')[0]);
+            setEvents(events || []);
+        } catch (err) {
+            setError('Failed to load events.');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const getEvents = async () => {
-            try {
-                const today = new Date();
-                const dates = Array.from({ length: 4 }, (_, i) => {
-                    const date = new Date(today);
-                    date.setDate(today.getDate() + i);
-                    return date;
-                });
+        const today = new Date(startDate);
+        const tomorrow = new Date(startDate);
+        tomorrow.setDate(today.getDate() + 1);
+        const twoDays = new Date(startDate);
+        twoDays.setDate(today.getDate() + 2);
+        const threeDays = new Date(startDate);
+        threeDays.setDate(today.getDate() + 3);
 
-                const [todayEvents, tomorrowEvents, twoDaysEvents, threeDaysEvents] = await Promise.all(
-                    dates.map(date => fetchEvents(date.toISOString().split('T')[0], date.toISOString().split('T')[0]))
-                );
+        setLoadingToday(true);
+        setLoadingTomorrow(true);
+        setLoadingInTwoDays(true);
+        setLoadingInThreeDays(true);
 
-                setEventsToday(todayEvents || []);
-                setEventsTomorrow(tomorrowEvents || []);
-                setEventsInTwoDays(twoDaysEvents || []);
-                setEventsInThreeDays(threeDaysEvents || []);
-            } catch (err) {
-                setError('Failed to load events.');
-            } finally {
-                setLoading(false);
-            }
-        };
+        getEventsForDay(today, setEventsToday, setLoadingToday);
+        getEventsForDay(tomorrow, setEventsTomorrow, setLoadingTomorrow);
+        getEventsForDay(twoDays, setEventsInTwoDays, setLoadingInTwoDays);
+        getEventsForDay(threeDays, setEventsInThreeDays, setLoadingInThreeDays);
+    }, [startDate]);
 
-        getEvents();
-    }, []);
+    const handleNextDays = () => {
+        const newStartDate = new Date(startDate);
+        newStartDate.setDate(startDate.getDate() + 4);
+        setStartDate(newStartDate);
+    };
 
-    if (loading) return <p>Loading...</p>;
-    if (error) return <p>{error}</p>;
+    const handlePreviousDays = () => {
+        const newStartDate = new Date(startDate);
+        newStartDate.setDate(startDate.getDate() - 4);
+        setStartDate(newStartDate);
+    };
+
+    const toggleDarkMode = () => {
+        setDarkMode(!darkMode);
+    };
 
     const formatDate = (date) => {
         const options = { weekday: 'long', month: 'long', day: 'numeric' };
         return date.toLocaleDateString(undefined, options);
     };
 
-    const today = new Date();
-    const tomorrow = new Date(today);
+    const today = new Date(startDate);
+    const tomorrow = new Date(startDate);
     tomorrow.setDate(today.getDate() + 1);
-    const twoDays = new Date(today);
+    const twoDays = new Date(startDate);
     twoDays.setDate(today.getDate() + 2);
-    const threeDays = new Date(today);
+    const threeDays = new Date(startDate);
     threeDays.setDate(today.getDate() + 3);
 
     return (
-        <div className="home">
+        <div className={`home ${darkMode ? 'dark-mode' : 'light-mode'}`}>
             <header className="header">
                 <h1>Arcane City</h1>
                 <h2>Upcoming Events in Pittsburgh</h2>
             </header>
+            <div className="button-container">
+                <button onClick={handlePreviousDays}>Previous 4 Days</button>
+                <button onClick={handleNextDays}>Next 4 Days</button>
+                <button onClick={toggleDarkMode}>
+                    {darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                </button>
+            </div>
             <div className="event-columns">
                 <div className="event-column">
                     <h3>{formatDate(today) === formatDate(new Date()) ? 'Today' : formatDate(today)}</h3>
-                    <EventList events={eventsToday} />
+                    {loadingToday ? (
+                        <div className="loading-container">
+                            <div className="loading-icon"></div>
+                        </div>
+                    ) : (
+                        <EventList events={eventsToday} />
+                    )}
                 </div>
                 <div className="event-column">
                     <h3>{formatDate(tomorrow)}</h3>
-                    <EventList events={eventsTomorrow} />
+                    {loadingTomorrow ? (
+                        <div className="loading-container">
+                            <div className="loading-icon"></div>
+                        </div>
+                    ) : (
+                        <EventList events={eventsTomorrow} />
+                    )}
                 </div>
                 <div className="event-column">
                     <h3>{formatDate(twoDays)}</h3>
-                    <EventList events={eventsInTwoDays} />
+                    {loadingInTwoDays ? (
+                        <div className="loading-container">
+                            <div className="loading-icon"></div>
+                        </div>
+                    ) : (
+                        <EventList events={eventsInTwoDays} />
+                    )}
                 </div>
                 <div className="event-column">
                     <h3>{formatDate(threeDays)}</h3>
-                    <EventList events={eventsInThreeDays} />
+                    {loadingInThreeDays ? (
+                        <div className="loading-container">
+                            <div className="loading-icon"></div>
+                        </div>
+                    ) : (
+                        <EventList events={eventsInThreeDays} />
+                    )}
                 </div>
             </div>
         </div>
